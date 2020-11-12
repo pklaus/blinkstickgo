@@ -20,6 +20,18 @@ import (
 	"github.com/google/gousb"
 )
 
+type BlinkStickVariant string
+
+const(
+    VARIANT_BLINKSTICK        BlinkStickVariant = "BLINKSTICK"
+    VARIANT_BLINKSTICK_PRO    BlinkStickVariant = "BLINKSTICK_PRO"
+    VARIANT_BLINKSTICK_SQUARE BlinkStickVariant = "BLINKSTICK_SQUARE"
+    VARIANT_BLINKSTICK_STRIP  BlinkStickVariant = "BLINKSTICK_STRIP"
+    VARIANT_BLINKSTICK_NANO   BlinkStickVariant = "BLINKSTICK_NANO"
+    VARIANT_BLINKSTICK_FLEX   BlinkStickVariant = "BLINKSTICK_FLEX"
+    VARIANT_UNKNOWN           BlinkStickVariant = "UNKNOWN"
+)
+
 var ctx *gousb.Context
 const vendorID = 0x20A0
 const productID = 0x41E5
@@ -81,6 +93,38 @@ func (stk *BlinkStick) GetLEDCount() int {
 
 	return stk.ledCount
 }
+
+// GetBlinkStickVariant returns a string representing the type of BlinkStick detected.
+func (stk *BlinkStick) GetBlinkStickVariant() BlinkStickVariant {
+	serial := stk.Serial
+	major := string(serial[len(serial)-3])
+	device_version := stk.Device.Desc.Device
+
+	switch {
+	case major == "1":
+		return VARIANT_BLINKSTICK
+	case major == "2":
+		return VARIANT_BLINKSTICK_PRO
+	case major == "3":
+
+		switch {
+		case device_version == 0x200:
+			return VARIANT_BLINKSTICK_SQUARE
+		case device_version == 0x201:
+			return VARIANT_BLINKSTICK_STRIP
+		case device_version == 0x202:
+			return VARIANT_BLINKSTICK_NANO
+		case device_version == 0x203:
+			return VARIANT_BLINKSTICK_FLEX
+		default:
+			return VARIANT_UNKNOWN
+		}
+
+	default:
+		return VARIANT_UNKNOWN
+	}
+}
+
 
 // GetName returns the name of the device.
 func (stk *BlinkStick) GetName() string {
